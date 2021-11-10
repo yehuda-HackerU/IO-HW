@@ -2,7 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace IO_HW
@@ -16,20 +16,34 @@ namespace IO_HW
         public int NumberOfPages { get; set; }
         public DateTime DatePublished { get; set; }
 
-        public string ToJSON() 
+        public Book()
         {
-            string id = $"\"ID\": \"{Id}\"";
-            string isbn = $"\"ISBN\": \"{ISBN}\"";
-            string author = $"\"Author\": \"{Author}\"";
-            string name = $"\"Name\": \"{Name}\"";
-            string numberOfPages = $"\"NumberOfPages\": {NumberOfPages}";
-            string datePublished = $"\"DatePublished\": \"{DatePublished}\"";
-            return "{" + $"{id}, {isbn}, {author}, {name}, {numberOfPages}, {datePublished}" + "}";
+
+        }
+
+        public Book(int id, Guid iSBN, string author, string name, int numberOfPages, DateTime datePublished)
+        {
+            Id = id;
+            ISBN = iSBN;
+            Author = author;
+            Name = name;
+            NumberOfPages = numberOfPages;
+            DatePublished = datePublished;
+        }
+
+        public string ToJSON()
+        {
+            return JsonSerializer.Serialize(this);
         }
 
         public string ToCSV()
         {
             return $"{Id},{ISBN},{Author},{Name},{NumberOfPages},{DatePublished}";
+        }
+
+        public string ToFixedLength()
+        {
+            return string.Format("{0,5}{1,36}{2,16}{3,25}{4,4}{5,20}", Id, ISBN, Author, Name, NumberOfPages, DatePublished);
         }
     }
 
@@ -69,7 +83,7 @@ namespace IO_HW
                 Book lastItem = bookList.Last();
                 foreach (var book in bookList)
                 {
-                    var jsonObject =book.ToJSON() + ",";
+                    var jsonObject = book.ToJSON() + ",";
                     if (book == lastItem)
                     {
                         jsonObject = book.ToJSON();
@@ -78,6 +92,56 @@ namespace IO_HW
                 }
                 streamWriter.WriteLine("]");
             }
+            #endregion
+
+            #region Ex4
+            streamWriter = new StreamWriter(@"C:\Users\ybsh1\Desktop\projects\bookList.txt");
+            using (streamWriter)
+            {
+                foreach (var book in bookList)
+                {
+                    streamWriter.WriteLine(book.ToFixedLength());
+                }
+            }
+            #endregion
+
+            #region Ex5
+            streamWriter = new StreamWriter(@"C:\Users\ybsh1\Desktop\projects\bookList.csv");
+            using (streamWriter)
+            {
+                foreach (var book in bookList)
+                {
+                    streamWriter.WriteLine(book.ToCSV());
+                }
+            }
+            #endregion
+
+            #region Ex6
+            List<Book> bookListFromCSV = new List<Book>();
+            foreach (var line in File.ReadAllLines(@"C:\Users\ybsh1\Desktop\projects\bookList.csv"))
+            {
+                string[] bookInfo =  line.Split(',');
+                int id = int.Parse(bookInfo[0]);
+                Guid isbn = Guid.Parse(bookInfo[1]);
+                string author = bookInfo[2];
+                string name = bookInfo[3];
+                int numberOfPages = int.Parse(bookInfo[4]);
+                DateTime datePublished = DateTime.Parse(bookInfo[5]);
+
+                bookListFromCSV.Add(new Book(id, isbn, author, name, numberOfPages, datePublished));
+            }
+            #endregion
+
+            #region Ex7
+            //CSV takes less memory because it does not keep blank characters like Fixed Length.
+            #endregion
+
+            #region Ex8
+            // I don't like it. (hard to read, lost data, more memory)
+            #endregion
+
+            #region Ex9
+            //takes even less memory and computers love 0100110011.
             #endregion
 
 
